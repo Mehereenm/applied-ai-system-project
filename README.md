@@ -22,6 +22,7 @@ PawPal+ now includes a smarter backend scheduling pipeline:
 
 - recurring task handling: marking a `daily` or `weekly` task complete creates a new instance at `today + 1 day` or `today + 7 days` using `timedelta`.
 - flexible sorting: tasks are sorted by priority and duration, and the scheduler offers a dedicated `sort_by_time()` helper.
+- predictive scheduling: the app uses task history and preferred time windows to forecast better start times for recurring care tasks.
 - conflict detection: built-in `detect_conflicts()` warns when tasks overlap in time (no crash mode).
 
 ## Testing PawPal+
@@ -54,6 +55,12 @@ Confidence Level: (4/5 stars) based on a passing pytest run with 5 tests and str
 python3 -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip3 install -r requirements.txt
+```
+
+To run the app:
+
+```bash
+streamlit run app.py
 ```
 
 ### Suggested workflow
