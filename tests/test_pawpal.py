@@ -85,3 +85,41 @@ def test_conflict_detection_duplicate_time():
     assert len(conflicts) >= 1
     assert "overlaps" in conflicts[0]
 
+
+def test_predictive_plan_uses_history():
+    """Verify predictive schedule uses history and returns a confidence score."""
+    owner = Owner(name="Sam", available_hours_per_day=8, preferred_start_time="8:00 AM", preferred_end_time="6:00 PM", preferences={})
+    pet = Pet(name="Buddy", species="Dog", age=4, special_needs=[])
+    owner.add_pet(pet)
+
+    task = Task(description="Walk", category="exercise", time=20, priority=5, frequency="daily", preferred_time="morning")
+    task.history = [
+        {"date": date.today(), "start_time": time(8, 0), "duration": 20},
+        {"date": date.today() - timedelta(days=1), "start_time": time(8, 15), "duration": 20},
+    ]
+    pet.add_task(task)
+
+    scheduler = Scheduler(owner=owner, constraints={})
+    plan = scheduler.generate_predictive_plan(date.today())
+
+    assert plan.scheduled_tasks[0]["start_time"] >= time(8, 0)
+    assert plan.confidence_score > 0.3
+    assert "Predicted optimal daily schedule" in plan.explanation
+
+
+def test_generate_predictive_plan_without_history():
+    """Verify the scheduler falls back cleanly when no history exists."""
+    owner = Owner(name="Ava", available_hours_per_day=8, preferred_start_time="8:00 AM", preferred_end_time="6:00 PM", preferences={})
+    pet = Pet(name="Kitty", species="Cat", age=2, special_needs=[])
+    owner.add_pet(pet)
+
+    task = Task(description="Feed", category="feeding", time=10, priority=4, frequency="daily", preferred_time="morning")
+    pet.add_task(task)
+
+    scheduler = Scheduler(owner=owner, constraints={})
+    plan = scheduler.generate_predictive_plan(date.today())
+
+    assert plan.scheduled_tasks[0]["task"].description == "Feed"
+    assert plan.confidence_score >= 0.35
+    assert not plan.warnings
+

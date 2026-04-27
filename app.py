@@ -125,9 +125,14 @@ st.divider()
 st.subheader("Build Schedule")
 st.caption("This button should call your scheduling logic once you implement it.")
 
+use_predictive = st.checkbox("Use predictive scheduling", value=True)
+
 if st.button("Generate Schedule"):
     if st.session_state.owner.pets and any(pet.tasks for pet in st.session_state.owner.pets):
-        plan = st.session_state.scheduler.generate_daily_plan(date.today())
+        if use_predictive:
+            plan = st.session_state.scheduler.generate_predictive_plan(date.today())
+        else:
+            plan = st.session_state.scheduler.generate_daily_plan(date.today())
 
         # Show conflict warnings clearly
         if plan.warnings:
@@ -144,11 +149,14 @@ if st.button("Generate Schedule"):
                 "End": item["end_time"].strftime("%H:%M"),
                 "Priority": item["task"].priority,
                 "Duration": item["task"].time,
+                "Confidence": f"{item['task'].predicted_confidence:.2f}" if hasattr(item['task'], 'predicted_confidence') else "N/A",
             })
         if schedule_rows:
             st.success("Schedule generated successfully.")
             st.table(schedule_rows)
             st.info(plan.explain_plan())
+            if hasattr(plan, "confidence_score") and plan.confidence_score > 0:
+                st.caption(f"Predictive confidence: {plan.confidence_score:.2f}")
         else:
             st.info("No tasks to schedule for today.")
 
