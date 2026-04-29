@@ -324,6 +324,7 @@ class DailyPlan:
     total_time: int
     explanation: str
     warnings: List[str] = field(default_factory=list)
+    confidence_score: float = 0.0
 
     def add_scheduled_task(self, task: Task, start_time: time, end_time: time):
         """Add a scheduled task with start and end times to the plan."""
